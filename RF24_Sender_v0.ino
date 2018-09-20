@@ -1,59 +1,61 @@
 /*  New Sketch to develop RF2.4Ghz
- *  Sender Nano in Green mini Protoboard
- *  with Joystick Poti
+ *  Sender Nano in mimi green Protoboard
+ *  with Poty
  */
 
 #include <nRF24L01.h>
 #include <SPI.h>
 #include "RF24.h"
 /******************* User Config ***************/
-RF24 radio(7,8);
-bool radioNumber = 0;
-
-const byte address[6] = "00001";
-//byte addresses[][6] = {"1Node","2Node"};
-bool role = 0;
+RF24 radio(9,10);
+bool radioNumber = 1;
+bool role = 1;
 const int BlueLed = 4;
-const int BlueLed2 = A5;
+const int Led2 = A5;
+const int VRx = A7;
+const int VRy = A6;
 const int Pushbutton = 3;
 
-unsigned int variable;
+int message; 
+const byte address[6] = "00001";
 
 void setup() 
 {
   Serial.begin(9600);
+  pinMode(BlueLed, OUTPUT);
+  pinMode(Led2, OUTPUT);
+  pinMode(Pushbutton, INPUT_PULLUP);
+  pinMode(VRx, INPUT);
+  pinMode(VRy, INPUT);
   radio.begin();
-  radio.openReadingPipe(0, address);
-  radio.setPALevel(RF24_PA_HIGH);
-  //radio.openWritingPipe(addresses[0]);
-  //radio.openReadingPipe(1,addresses[1]);
-  radio.startListening();
+  radio.openWritingPipe(address);
+  radio.setPALevel(RF24_PA_MAX);
+  radio.setRetries(1000,20);
+  radio.stopListening();
 }
 
 void loop() 
 {
-  if ( role == 0 )
+  //digitalWrite(Led2, HIGH);
+  //delay(20);
+  //digitalWrite(Led2, LOW);
+  message = analogRead(VRx);
+  
+  if(radio.write(&message, sizeof(int) ))
   {
-    Serial.println("waiting");
-    radio.startListening();
-    unsigned int message;
-
-    if (radio.available()) 
-    {
- 
-       radio.read( &message, sizeof(unsigned int) );
-       Serial.print("I listened this = ");
-       Serial.println(message);
-       variable = int(&message);
-       Serial.print("           with pointer = ");
-       Serial.println(variable);
-       if(variable == 4517)
-        {
-          Serial.println("me cago de felicidad");
-          digitalWrite(BlueLed,HIGH);
-          delay(100);
-          digitalWrite(BlueLed,LOW);
-        }
-    }
+    Serial.print("Message was sent = ");
+    Serial.println(message);
+    digitalWrite(BlueLed, HIGH);
+    delay(20);
+    digitalWrite(BlueLed, LOW);
+   
   }
+  else
+  {
+    //Serial.println("Message was not sent");
+  }
+  
 }
+
+
+
